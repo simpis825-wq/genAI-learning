@@ -1,38 +1,28 @@
 
 import OpenAI from "openai";
 import dotenv from "dotenv";
+import{createReadStream, writeFileSync} from'fs';
 dotenv.config();
 
-const context =[
-  {
-    role:'system',
-    content:'keep answer short and simple'
-  }
-]
+
 const client = new OpenAI({
     apiKey: process.env.openai_key,
      baseURL: "https://api.groq.com/openai/v1" //this will send the request to groq api instead of openai api
 })
-async function aiAnswer(qsn){
-  context.push({role:'user',content:qsn})
-    const response = await client.responses.create({
-        model : "openai/gpt-oss-20b",
-        input:context
+
+async function main(){
+  
+    const response = await client.audio.transcriptions.create({
+       // model : "openai/gpt-oss-20b",
+       model: "whisper-large-v3-turbo",
+      file:createReadStream("./freesound_community-frase-91641.mp3"),
+      language: "en",
     })
-    context.push({role:'assistant',content:response.output_text})
-    //this si to remember what we have asked and what the ai has answered so that it can answer in context
-    console.log(context)
-    //but this increases the token bcs it remembers the whole conversation so it will be better to keep the context small and simple
-     console.log(response.output_text);
+    console.log(response.text);
+    const audio=response.text;
+    writeFileSync("audio.txt",audio,"utf-8");//utf-8 is format.
+    //this will create a text file with the transcribed text from the audio file.
+    
 }
-//aiAnswer();
-//chat with terminal 
-process.stdout.write("Ask me anything: ")
-process.stdin.on("data",(data)=>{
-  const qsn = data.toString().trim();
-  if(qsn=="exit||Exit"){
-    process.exit();
-  }else{
-    aiAnswer(qsn);
-  }
-});
+
+main();
