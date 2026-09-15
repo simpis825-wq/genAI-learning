@@ -4,43 +4,45 @@ import dotenv from "dotenv";
 import express from "express";
 import multer from "multer";
 import path from "path";
-import { createReadStream } from "fs";
+import { createReadStream, writeFileSync } from "fs";
 
-dotenv.config();
 const app = express();
-app.get("/",(req,res)=>{
-  res.send(`<form action="/upload" method="post" enctype="multipart/form-data">
-    <input type ="file" name ="audio"/>
-    <button>Upload file</button>
-    </form>`)
-})
-
+dotenv.config();
+app.use(express.urlencoded({ extended: true })); // this is the middleware to help the post request
 
 const client = new OpenAI({
     apiKey: process.env.openai_key,
      baseURL: "https://api.groq.com/openai/v1" //this will send the request to groq api instead of openai api
 })
 
-const storage = multer.diskStorage({
-  destination:'uploads',
-  filename:(req,file,cb)=>{
-    const ext = path.extname(file.originalname);
-    cb(null,file.fieldname+ext);
-  }
-})
-//middleware to handle file upload
-const upload = multer({storage});
-app.post("/upload",upload.single("audio"),async (req,res)=>{
+//Route
+app.get("/", (req, res) => {
+    res.send(`<form action="/audio" method="post">
+      <input type="text" name="inputData"/> 
+      <br/>
+      <br/>
+      <button>Convert text in Audio</button>
+      
+      </form>`);
+});
 
-      const response = await client.audio.transcriptions.create({
-       // model : "openai/gpt-oss-20b",
-       model: "whisper-large-v3-turbo",
-      file:createReadStream(req.file.path),
-      language: "en",
-    })
-    const output = response.text;
-   // console.log(response.text);
-  res.send(`<h1>${output}</h1>`);
+app.post("/audio",async (req,res)=>{
+  
+  await main(req,res);
 })
+async function main(req,res){
+  const response = await client.audio.speech.create({
+    model:"canopylabs/orpheus-v1-english",
+    input:req?.body?.inputData,
+    voice:"troy",
+    response_format: "wav",
+  });
+  const baseResponse = Buffer.from(await response.arrayBuffer());
+  writeFileSync("audio.mp3",baseResponse);
+  console.log(baseResponse);
+   res.send("Text Converted to Audio");
+  
+}
 
+//main();
 app.listen(3200);
