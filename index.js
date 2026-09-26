@@ -6,20 +6,16 @@ const googleGenAI = new GoogleGenAI({
 });
 
 async function main(){
-  const response = await googleGenAI.models.generateContent({
+  const response = await googleGenAI.models.generateContentStream({
     model: "gemini-3.6-flash",
-    contents:"What is the religion?",
-    config:{
-
-      thinkingConfig:{
-        includeThoughts:true,
-        thinkingBudget:100
-      },
-      temperature:2
-     // systemInstruction:"give a simple answer in 30 words"
-    }
+    contents:"Tell me about AI in detail",
+    
   })
-  console.log(response.text);
+ // console.log(response.text);
+ for await (const chunk of response) {
+     const text = chunk.text;
+     console.log(text);
+ }
 }
 
 main();
