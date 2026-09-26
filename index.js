@@ -8,7 +8,16 @@ const googleGenAI = new GoogleGenAI({
 async function main(){
   const response = await googleGenAI.models.generateContent({
     model: "gemini-3.6-flash",
-    contents:"What is the capital of France?",
+    contents:"What is the religion?",
+    config:{
+
+      thinkingConfig:{
+        includeThoughts:true,
+        thinkingBudget:100
+      },
+      temperature:2
+     // systemInstruction:"give a simple answer in 30 words"
+    }
   })
   console.log(response.text);
 }
