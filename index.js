@@ -1,32 +1,52 @@
 import { GoogleGenAI } from "@google/genai";
+import { resolve } from "dns";
 import dotenv from "dotenv";
-import {readFileSync} from "fs";
+import express from "express";
 dotenv.config();
+
+const app =express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.get('/', (req, res) => {
+  res.send(`<form action="/generate" method="post">
+    <input type ="text" name="text" placeholder="Enter prompt" />
+    <button>Click me</button>
+  </form>`);
+}
+);
+app.post('/generate', async (req, res) => {
+  const prompt = req.body.text;
+  await main(prompt);
+  res.send("Video generated successfully!");
+});
 
 const googleGenAI = new GoogleGenAI({
   apiKey: process.env.gemini_key,
 });
 
-async function main(){
+async function main(prompt){
  
-  const base64= readFileSync("./Image/WhatsApp Image 2025-05-13 at 23.27.52.jpeg",{
-    encoding: "base64"
-  });
- 
-  const response = await googleGenAI.models.generateContent({
-    model: "gemini-3.6-flash",
-    contents:[{
-      inlineData:{
-        mimeType: "image/jpeg",
-        data: base64
-      },
-    },
-    //we can give the prompts of whatever we want
-   // {text:"read text from this image"}
-     {text:"give me the color combination of this image "}
-  ],
+  let operation = await googleGenAI.models.generateVideos({
+    model: "veo-3.1-generate-preview",
+   prompt: prompt,
+   config:{
+    numberOfImages: 1
+   }
   })
-  console.log(response.text);
+ while(!operation.done){
+console.log("please wait, video is getting ready")
+await new Promise((resolve)=>setTimeout(resolve,1000));
+operation=await GoogleAI.operation.getVideosOperation({
+  operation:operation
+})
+ }
+
+ GoogleAI.files.download({
+  file:operation.response.generateVideo[0].video,
+  downloadPath:"video.mp4"
+ })
 }
-main();
+app.listen(3200);
+
  
