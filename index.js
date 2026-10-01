@@ -1,52 +1,25 @@
 import { GoogleGenAI } from "@google/genai";
-import { resolve } from "dns";
+import OpenAI from "openai";
 import dotenv from "dotenv";
-import express from "express";
+
 dotenv.config();
 
-const app =express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-app.get('/', (req, res) => {
-  res.send(`<form action="/generate" method="post">
-    <input type ="text" name="text" placeholder="Enter prompt" />
-    <button>Click me</button>
-  </form>`);
-}
-);
-app.post('/generate', async (req, res) => {
-  const prompt = req.body.text;
-  await main(prompt);
-  res.send("Video generated successfully!");
-});
-
-const googleGenAI = new GoogleGenAI({
-  apiKey: process.env.gemini_key,
-});
-
-async function main(prompt){
- 
-  let operation = await googleGenAI.models.generateVideos({
-    model: "veo-3.1-generate-preview",
-   prompt: prompt,
-   config:{
-    numberOfImages: 1
-   }
-  })
- while(!operation.done){
-console.log("please wait, video is getting ready")
-await new Promise((resolve)=>setTimeout(resolve,1000));
-operation=await GoogleAI.operation.getVideosOperation({
-  operation:operation
+//***********This code is not working with openAi api because of billing  ************ */
+// Step 1 check which model (OpenAI or Gemini) you are using 
+//Step 2 check if you are using openAi with Groq
+//step 3 check if key is same as model in .env file
+const client = new OpenAI({
+    apiKey: process.env.openai_key,
 })
- }
 
- GoogleAI.files.download({
-  file:operation.response.generateVideo[0].video,
-  downloadPath:"video.mp4"
- })
+async function main(){
+
+const response = await client.embeddings.create({
+  model:"text-embedding-3-small",
+  input:"world"
+})
+console.log(response.data[0].embedding);
 }
-app.listen(3200);
 
+main();
  
